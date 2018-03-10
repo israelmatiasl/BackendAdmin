@@ -2,6 +2,7 @@
 
 // Requires
 var express = require('express');
+var bodyParser = require('body-parser');
 
 // Inicializar variables
 var app = express();
@@ -9,10 +10,13 @@ var app = express();
 
 // Cargar rutas
 var home_routes = require('./routes/home.route');
+var user_routes = require('./routes/user.route');
+var account_routes = require('./routes/account.route')
 
 
 // Cargar middlewares
-
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 
 // Cors
@@ -21,10 +25,9 @@ var home_routes = require('./routes/home.route');
 
 // Rutas
 app.use('/api', home_routes);
-// app.get('/', (req, res, next) => {
+app.use('/api', user_routes);
+app.use('/api', account_routes);
 
-//     res.status(200).json({ ok: true, message: 'Petición correcta' });
-// });
 
 
 // Exportar
