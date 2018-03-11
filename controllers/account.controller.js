@@ -3,9 +3,7 @@
 var User = require('../models/user');
 
 var bcrypt = require('bcryptjs');
-//var jwt = require('jsonwebtoken');
 
-//var secretKey = require('../helpers/constants').secretKey;
 var jwt = require('../services/jwt.service');
 
 

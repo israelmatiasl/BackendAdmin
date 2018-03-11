@@ -1,29 +1,28 @@
 'use strict'
 
-var User = require('../models/user');
+var Hospital = require('../models/hospital');
 
-var bcrypt = require('bcryptjs');
 var mongoosePagination = require('mongoose-pagination');
 
 var itemsPerPage = require('../helpers/constants').itemsPerPage;
 
 //  =====================================
-//  OBTENER TODOS LOS USUARIOS
+//  OBTENER TODOS LOS HOSPITALES
 //  =====================================
-function getUsers(req, res) {
+function getHospitals(req, res) {
 
     var page = 1;
     if (req.query.page) {
         page = req.query.page;
     }
 
-    User.find({}, 'name email role')
-        .paginate(page, itemsPerPage, (err, users, total) => {
-
+    Hospital.find({})
+        .populate('user', 'name email image')
+        .paginate(page, itemsPerPage, (err, hospitals, total) => {
             if (err) {
                 return res.status(500).send({
                     ok: false,
-                    mensaje: 'Error al buscar todos los usuarios',
+                    mensaje: 'Error al buscar todos los hospitales',
                     errors: err
                 });
             }
@@ -33,7 +32,7 @@ function getUsers(req, res) {
                 page,
                 pages: Math.ceil(total / itemsPerPage),
                 total,
-                users
+                hospitals
             });
         });
 }
@@ -41,37 +40,36 @@ function getUsers(req, res) {
 
 
 //  =====================================
-//  OBTENER UN USUARIO 
+//  OBTENER UN HOSPITAL
 //  =====================================
-function getUser(req, res) {
+function getHospital(req, res) {
 
-    var userId = req.params.id;
+    var hospitalId = req.params.id;
 
-    User.findById(userId, 'name email role')
-        .exec(
-            (err, user) => {
-                if (err) {
-                    return res.status(500).send({
-                        ok: false,
-                        mensaje: 'Error al buscar el usuario',
-                        errors: err
-                    });
-                }
+    Hospital.findById(hospitalId).populate('user', 'name email image')
+        .exec((err, hospital) => {
 
-                return res.status(200).send({
-                    ok: true,
-                    user
+            if (err) {
+                return res.status(500).send({
+                    ok: false,
+                    mensaje: 'Error al buscar el hospital',
+                    errors: err
                 });
             }
-        )
+
+            return res.status(200).send({
+                ok: true,
+                hospital
+            });
+        });
 }
 
 
 
 //  =====================================
-//  CREAR UN NUEVO USUARIO 
+//  CREAR UN NUEVO HOSPITAL
 //  =====================================
-function saveUser(req, res) {
+function saveHospital(req, res) {
 
     var params = req.body;
     var identifiedUser = req.user.user;
@@ -84,39 +82,39 @@ function saveUser(req, res) {
         });
     }
 
-    var user = new User({
+    var hospital = new Hospital({
         name: params.name,
-        email: params.email,
-        password: bcrypt.hashSync(params.password, 10),
         image: null,
-        role: params.role
+        user: identifiedUser._id
     });
 
-    user.save((err, userStored) => {
+    hospital.save((err, hospitalStored) => {
+
         if (err) {
             return res.status(400).send({
                 ok: false,
-                mensaje: 'Error al crear un usuario',
+                mensaje: 'Error al crear un hospital',
                 errors: err
             });
         }
 
         return res.status(201).send({
             ok: true,
-            userStored
+            hospitalStored
         });
     });
+
 }
 
 
 
 //  =====================================
-//  ACTUALIZAR UN USUARIO 
+//  ACTUALIZAR HOSPITAL
 //  =====================================
-function updateUser(req, res) {
+function updateHospital(req, res) {
 
-    var userId = req.params.id;
-    var userToUpdate = req.body;
+    var hospitalId = req.params.id;
+    var hospitalToUpdate = req.body;
     var identifiedUser = req.user.user;
 
     if (identifiedUser.role != 'ADMIN_ROLE') {
@@ -127,50 +125,48 @@ function updateUser(req, res) {
         });
     }
 
-    //delete password(seguridad)
-    delete userToUpdate.password;
+    Hospital.findById(hospitalId, (err, foundHospital) => {
 
-    User.findById(userId, (err, foundUser) => {
         if (err) {
             return res.status(500).send({
                 ok: false,
-                mensaje: 'Error al buscar el usuario',
+                mensaje: 'Error al buscar el hospital',
                 errors: err
             });
         }
 
-        if (!foundUser) {
+        if (!foundHospital) {
             return res.status(400).send({
                 ok: false,
-                mensaje: 'El usuario con el id: ' + userId + ', no existe'
+                mensaje: 'El hospital con el id: ' + hospitalId + ', no existe'
             });
         }
 
-        User.findByIdAndUpdate(userId, userToUpdate, { new: true }, (err, userUpdated) => {
+        Hospital.findByIdAndUpdate(hospitalId, hospitalToUpdate, { new: true }, (err, hospitalUpdated) => {
             if (err) {
                 return res.status(400).send({
                     ok: false,
-                    mensaje: 'Error al actualizar el usuario',
+                    mensaje: 'Error al actualizar el hospital',
                     errors: err
                 });
             }
-            userUpdated.password = undefined;
+
             return res.status(200).send({
                 ok: true,
-                userUpdated
+                hospitalUpdated
             });
-        });
+        })
     });
 }
 
 
 
 //  =====================================
-//  ELIMINAR UN USUARIO 
+//  ELIMINAR HOSPITAL
 //  =====================================
-function deleteUser(req, res) {
+function deleteHospital(req, res) {
 
-    var userId = req.params.id;
+    var hospitalId = req.params.id;
     var identifiedUser = req.user.user;
 
     if (identifiedUser.role != 'ADMIN_ROLE') {
@@ -181,48 +177,49 @@ function deleteUser(req, res) {
         });
     }
 
-    User.findById(userId, (err, foundUser) => {
+    Hospital.findById(hospitalId, (err, foundHospital) => {
 
         if (err) {
             return res.status(500).send({
                 ok: false,
-                mensaje: 'Error al buscar el usuario',
+                mensaje: 'Error al buscar el hospital',
                 errors: err
             });
         }
 
-        if (!foundUser) {
+        if (!foundHospital) {
             return res.status(400).send({
                 ok: false,
-                mensaje: 'El usuario con el id: ' + userId + ', no existe'
+                mensaje: 'El hospital con el id: ' + hospitalId + ', no existe'
             });
         }
 
-        User.findByIdAndRemove(userId, (err, userDeleted) => {
+        Hospital.findByIdAndRemove(hospitalId, (err, hospitalDeleted) => {
             if (err) {
                 return res.status(400).send({
                     ok: false,
-                    mensaje: 'Error al eliminar el usuario',
+                    mensaje: 'Error al eliminar el hospital',
                     errors: err
                 });
             }
 
             return res.status(200).send({
                 ok: true,
-                userDeleted
+                hospitalDeleted
             });
         });
-    })
+    });
 }
+
 
 
 //  =====================================
 //  EXPORTACIÓN DE FUNCIONES
 //  =====================================
 module.exports = {
-    getUser,
-    getUsers,
-    saveUser,
-    updateUser,
-    deleteUser
+    getHospitals,
+    getHospital,
+    saveHospital,
+    updateHospital,
+    deleteHospital
 }

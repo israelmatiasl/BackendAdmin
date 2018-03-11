@@ -10,7 +10,7 @@ var validRoles = {
     message: '{VALUE} no es un rol válido'
 }
 
-var userSchema = Schema({
+var userSchema = new Schema({
     name: { type: String, required: [true, 'El nombre es necesario'] },
     email: { type: String, unique: true, required: [true, 'El correo es necesario'] },
     password: { type: String, required: [true, 'La contraseña es necesaria'] },

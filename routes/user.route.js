@@ -10,8 +10,8 @@ var api = express.Router();
 //  =====================================
 //  RUTAS DE LOS USUARIOS
 //  =====================================
-api.get('/user/:id', auth.tokenVerification, userController.getUser);
 api.get('/users', auth.tokenVerification, userController.getUsers);
+api.get('/user/:id', auth.tokenVerification, userController.getUser);
 api.post('/user', auth.tokenVerification, userController.saveUser);
 api.put('/user/:id', auth.tokenVerification, userController.updateUser);
 api.delete('/user/:id', auth.tokenVerification, userController.deleteUser);

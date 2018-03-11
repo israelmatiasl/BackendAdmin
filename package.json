@@ -13,8 +13,10 @@
         "bcryptjs": "^2.4.3",
         "body-parser": "^1.18.2",
         "express": "^4.16.2",
+        "express-fileupload": "^0.4.0",
         "jsonwebtoken": "^8.2.0",
         "mongoose": "^5.0.9",
+        "mongoose-pagination": "^1.0.0",
         "mongoose-unique-validator": "^2.0.0"
     },
     "devDependencies": {
